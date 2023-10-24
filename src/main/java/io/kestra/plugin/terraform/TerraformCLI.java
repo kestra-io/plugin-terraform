@@ -19,6 +19,7 @@ import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @SuperBuilder
 @ToString
@@ -26,14 +27,22 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Short description for this task",
-    description = "Full description of this task"
+    title = "Execute terraform command"
 )
 @Plugin(
     examples = {
         @io.kestra.core.models.annotations.Example(
             title = "Simple revert",
-            code = { "format: \"Text to be reverted\"" }
+            code = {
+                "env: " +
+                "  AWS_ACCESS_KEY_ID: \"{{ secret('AWS_ACCESS_KEY_ID') }}\"",
+                "  AWS_ACCESS_KEY_ID: \"{{ secret('AWS_ACCESS_KEY_ID') }}\"",
+                "  AWS_DEFAULT_REGION: \"{{ secret('AWS_DEFAULT_REGION') }}\"",
+                "beforeCommands: " +
+                "  - terraform init",
+                "commands: " +
+                "  - terraform apply -auto-approve"
+            }
         )
     }
 )
@@ -73,18 +82,12 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput> {
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
-        CommandsWrapper commandsWrapper = new CommandsWrapper(runContext)
-            .withWarningOnStdErr(true)
-            .withRunnerType(RunnerType.DOCKER)
-            .withDockerOptions(injectDefaults(getDocker()))
-            .withEnv(new HashMap<>());
-
         if (this.beforeCommands != null) {
             return new CommandsWrapper(runContext)
                 .withWarningOnStdErr(true)
                 .withRunnerType(RunnerType.DOCKER)
                 .withDockerOptions(injectDefaults(getDocker()))
-                .withEnv(new HashMap<>())
+                .withEnv(Optional.ofNullable(env).orElse(new HashMap<>()))
                 .withCommands(ScriptService.scriptCommands(List.of("/bin/sh", "-c"), runContext.render(this.beforeCommands), runContext.render(this.commands)))
                 .run();
         } else {
@@ -92,7 +95,7 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput> {
                 .withWarningOnStdErr(true)
                 .withRunnerType(RunnerType.DOCKER)
                 .withDockerOptions(injectDefaults(getDocker()))
-                .withEnv(new HashMap<>())
+                .withEnv(Optional.ofNullable(env).orElse(new HashMap<>()))
                 .withCommands(ScriptService.scriptCommands(List.of("/bin/sh", "-c"), null, runContext.render(this.commands)))
                 .run();
         }
