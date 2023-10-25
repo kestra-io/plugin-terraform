@@ -30,22 +30,45 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute terraform command"
+    title = "Orchestrate Infrastructure as Code by executing Terraform CLI commands in a Docker container. This task assumes that you use a remote backend for storing Terraform state files, such as AWS S3, GCS, or Terraform Cloud."
 )
 @Plugin(
     examples = {
         @Example(
-            title = "Initialize terraform and apply",
-            code = {
-                "env: " +
-                "  AWS_ACCESS_KEY_ID: \"{{ secret('AWS_ACCESS_KEY_ID') }}\"",
-                "  AWS_ACCESS_KEY_ID: \"{{ secret('AWS_ACCESS_KEY_ID') }}\"",
-                "  AWS_DEFAULT_REGION: \"{{ secret('AWS_DEFAULT_REGION') }}\"",
-                "beforeCommands: " +
-                "  - terraform init",
-                "commands: " +
-                "  - terraform apply -auto-approve"
-            }
+            title = "Initialize Terraform, then create and apply the Terraform plan",
+            full = true,
+            code = """
+                id: git_terraform
+                namespace: dev
+
+                tasks:
+                  - id: git
+                    type: io.kestra.core.tasks.flows.WorkingDirectory
+                    tasks:
+                      - id: clone_repository
+                        type: io.kestra.plugin.git.Clone
+                        url: https://github.com/anna-geller/kestra-ci-cd
+                        branch: main
+
+                      - id: variables
+                        type: io.kestra.core.tasks.storages.LocalFiles
+                        inputs:
+                        terraform.tfvars: |
+                            username            = "cicd"
+                            password            = "{{ secret('CI_CD_PASSWORD') }}"
+                            hostname            = "https://demo.kestra.io"
+
+                      - id: terraform
+                        type: io.kestra.plugin.terraform.TerraformCLI
+                        beforeCommands:
+                          - terraform init
+                        commands:
+                          - terraform apply -auto-approve
+                        env:
+                          AWS_ACCESS_KEY_ID: "{{ secret('AWS_ACCESS_KEY_ID') }}"
+                          AWS_SECRET_ACCESS_KEY: "{{ secret('AWS_SECRET_ACCESS_KEY') }}"
+                          AWS_DEFAULT_REGION: "{{ secret('AWS_DEFAULT_REGION') }}"
+                """
         )
     }
 )
@@ -53,13 +76,13 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "hashicorp/terraform";
 
     @Schema(
-        title = "The commands to run before main list of commands"
+        title = "The setup commands to initialize the environment before executing the main list of commands such as `terraform init`."
     )
     @PluginProperty(dynamic = true)
     protected List<String> beforeCommands;
 
     @Schema(
-        title = "The commands to run"
+        title = "The commands to run such as `terraform apply -auto-approve`."
     )
     @PluginProperty(dynamic = true)
     @NotNull
@@ -67,7 +90,7 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput> {
     protected List<String> commands;
 
     @Schema(
-        title = "Additional environment variables for the current process."
+        title = "Additional environment variables such as credentials and configuration for the Terraform provider."
     )
     @PluginProperty(
         additionalProperties = String.class,
