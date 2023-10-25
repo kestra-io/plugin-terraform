@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static io.kestra.core.utils.Rethrow.throwFunction;
+
 @SuperBuilder
 @ToString
 @EqualsAndHashCode
@@ -82,24 +84,19 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput> {
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
-        if (this.beforeCommands != null) {
-            return new CommandsWrapper(runContext)
-                .withWarningOnStdErr(true)
-                .withRunnerType(RunnerType.DOCKER)
-                .withDockerOptions(injectDefaults(getDocker()))
-                .withEnv(Optional.ofNullable(env).orElse(new HashMap<>()))
-                .withCommands(ScriptService.scriptCommands(List.of("/bin/sh", "-c"), runContext.render(this.beforeCommands), runContext.render(this.commands)))
-                .run();
-        } else {
-            return new CommandsWrapper(runContext)
-                .withWarningOnStdErr(true)
-                .withRunnerType(RunnerType.DOCKER)
-                .withDockerOptions(injectDefaults(getDocker()))
-                .withEnv(Optional.ofNullable(env).orElse(new HashMap<>()))
-                .withCommands(ScriptService.scriptCommands(List.of("/bin/sh", "-c"), null, runContext.render(this.commands)))
-                .run();
-        }
-
+        return new CommandsWrapper(runContext)
+            .withWarningOnStdErr(true)
+            .withRunnerType(RunnerType.DOCKER)
+            .withDockerOptions(injectDefaults(getDocker()))
+            .withEnv(Optional.ofNullable(env).orElse(new HashMap<>()))
+            .withCommands(
+                ScriptService.scriptCommands(
+                    List.of("/bin/sh", "-c"),
+                    Optional.ofNullable(this.beforeCommands).map(throwFunction(runContext::render)).orElse(null),
+                    runContext.render(this.commands)
+                                            )
+                         )
+            .run();
     }
 
     private DockerOptions injectDefaults(DockerOptions original) {

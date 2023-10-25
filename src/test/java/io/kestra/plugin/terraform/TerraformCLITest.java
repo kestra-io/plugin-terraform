@@ -26,20 +26,35 @@ class TerraformCLITest {
     @Test
     @SuppressWarnings("unchecked")
     void run() throws Exception {
-        String envKey = "MY_KEY";
-        String envValue = "MY_VALUE";
+        String environmentKey = "MY_KEY";
+        String environmentValue = "MY_VALUE";
 
-        TerraformCLI runner = TerraformCLI.builder()
+        TerraformCLI.TerraformCLIBuilder<?, ?> terraformBuilder = TerraformCLI.builder()
             .id(IdUtils.create())
             .type(TerraformCLI.class.getName())
-            .docker(DockerOptions.builder().networkMode("host").image("hashicorp/terraform").entryPoint(Collections.emptyList()).build())
-            .env(Map.of("{{ inputs.envKey }}", "{{ outputs.envValue }}"))
-            .commands(List.of("terraform version"))
-            .build();
+            .docker(DockerOptions.builder().image("hashicorp/terraform").entryPoint(Collections.emptyList()).build())
+            .commands(List.of("terraform version"));
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, runner, Map.of("envKey", envKey, "envValue", envValue));
+        TerraformCLI runner = terraformBuilder.build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, runner, Map.of("environmentKey", environmentKey, "environmentValue", environmentValue));
 
         ScriptOutput scriptOutput = runner.run(runContext);
         assertThat(scriptOutput.getExitCode(), is(0));
+
+        runner = terraformBuilder
+            .env(Map.of("{{ inputs.environmentKey }}", "{{ inputs.environmentValue }}"))
+            .beforeCommands(List.of("terraform init"))
+            .commands(List.of(
+                "echo \"::{\\\"outputs\\\":{" +
+                    "\\\"customEnv\\\":\\\"$" + environmentKey + "\\\"" +
+                    "}}::\"",
+                "terraform validate | tr -d ' \n' | xargs -0 -I {} echo '::{\"outputs\":{}}::'"
+                             ))
+            .build();
+
+        scriptOutput = runner.run(runContext);
+        assertThat(scriptOutput.getExitCode(), is(0));
+        assertThat(scriptOutput.getVars().get("customEnv"), is(environmentValue));
     }
 }
