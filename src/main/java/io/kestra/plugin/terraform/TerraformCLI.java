@@ -63,11 +63,16 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
                         beforeCommands:
                           - terraform init
                         commands:
-                          - terraform apply -auto-approve
+                          - terraform plan 2>&1 | tee plan_output.txt
+                          - terraform apply -auto-approve 2>&1 | tee apply_output.txt
                         env:
                           AWS_ACCESS_KEY_ID: "{{ secret('AWS_ACCESS_KEY_ID') }}"
                           AWS_SECRET_ACCESS_KEY: "{{ secret('AWS_SECRET_ACCESS_KEY') }}"
                           AWS_DEFAULT_REGION: "{{ secret('AWS_DEFAULT_REGION') }}"
+                      - id: outputs
+                        type: io.kestra.core.tasks.storages.LocalFiles
+                        outputs:
+                          - "*.txt"
                 """
         )
     }
