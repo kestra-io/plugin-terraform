@@ -1,5 +1,6 @@
 package io.kestra.plugin.terraform;
 
+import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.tasks.RunnableTask;
@@ -33,8 +34,8 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 )
 @Plugin(
     examples = {
-        @io.kestra.core.models.annotations.Example(
-            title = "Simple revert",
+        @Example(
+            title = "Initialize terraform and apply",
             code = {
                 "env: " +
                 "  AWS_ACCESS_KEY_ID: \"{{ secret('AWS_ACCESS_KEY_ID') }}\"",
