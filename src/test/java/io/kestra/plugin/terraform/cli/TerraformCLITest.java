@@ -1,4 +1,4 @@
-package io.kestra.plugin.terraform;
+package io.kestra.plugin.terraform.cli;
 
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;

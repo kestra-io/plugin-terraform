@@ -1,4 +1,4 @@
-package io.kestra.plugin.terraform;
+package io.kestra.plugin.terraform.cli;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
@@ -53,13 +53,13 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
                       - id: variables
                         type: io.kestra.core.tasks.storages.LocalFiles
                         inputs:
-                        terraform.tfvars: |
+                          terraform.tfvars: |
                             username            = "cicd"
                             password            = "{{ secret('CI_CD_PASSWORD') }}"
                             hostname            = "https://demo.kestra.io"
 
                       - id: terraform
-                        type: io.kestra.plugin.terraform.TerraformCLI
+                        type: io.kestra.plugin.terraform.cli.TerraformCLI
                         beforeCommands:
                           - terraform init
                         commands:
