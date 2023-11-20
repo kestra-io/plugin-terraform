@@ -122,7 +122,7 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
             .withWarningOnStdErr(true)
             .withRunnerType(RunnerType.DOCKER)
             .withDockerOptions(injectDefaults(getDocker()))
-            .withEnv(Optional.ofNullable(env).orElse(new HashMap<>()))
+            .withEnv(Optional.ofNullable(runContext.renderMap(this.env)).orElse(new HashMap<>()))
             .withNamespaceFiles(namespaceFiles)
             .withInputFiles(inputFiles)
             .withOutputFiles(outputFiles)
