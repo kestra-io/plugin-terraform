@@ -42,7 +42,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 
                 tasks:
                   - id: git
-                    type: io.kestra.core.tasks.flows.WorkingDirectory
+                    type: io.kestra.plugin.core.flow.WorkingDirectory
                     tasks:
                       - id: clone_repository
                         type: io.kestra.plugin.git.Clone
@@ -50,7 +50,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
                         branch: main
 
                       - id: variables
-                        type: io.kestra.core.tasks.storages.LocalFiles
+                        type: io.kestra.plugin.core.storage.LocalFiles
                         inputs:
                           terraform.tfvars: |
                             username            = "cicd"
@@ -69,7 +69,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
                           AWS_SECRET_ACCESS_KEY: "{{ secret('AWS_SECRET_ACCESS_KEY') }}"
                           AWS_DEFAULT_REGION: "{{ secret('AWS_DEFAULT_REGION') }}"
                       - id: outputs
-                        type: io.kestra.core.tasks.storages.LocalFiles
+                        type: io.kestra.plugin.core.storage.LocalFiles
                         outputs:
                           - "*.txt"
                 """
