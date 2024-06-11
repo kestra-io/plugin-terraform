@@ -49,29 +49,24 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
                         url: https://github.com/anna-geller/kestra-ci-cd
                         branch: main
 
-                      - id: variables
-                        type: io.kestra.plugin.core.storage.LocalFiles
-                        inputs:
-                          terraform.tfvars: |
-                            username            = "cicd"
-                            password            = "{{ secret('CI_CD_PASSWORD') }}"
-                            hostname            = "https://demo.kestra.io"
-
                       - id: terraform
                         type: io.kestra.plugin.terraform.cli.TerraformCLI
                         beforeCommands:
                           - terraform init
+                        inputFiles:
+                          terraform.tfvars: |
+                            username            = "cicd"
+                            password            = "{{ secret('CI_CD_PASSWORD') }}"
+                            hostname            = "https://demo.kestra.io"
+                        outputFiles:
+                          - "*.txt"
                         commands:
                           - terraform plan 2>&1 | tee plan_output.txt
                           - terraform apply -auto-approve 2>&1 | tee apply_output.txt
                         env:
                           AWS_ACCESS_KEY_ID: "{{ secret('AWS_ACCESS_KEY_ID') }}"
                           AWS_SECRET_ACCESS_KEY: "{{ secret('AWS_SECRET_ACCESS_KEY') }}"
-                          AWS_DEFAULT_REGION: "{{ secret('AWS_DEFAULT_REGION') }}"
-                      - id: outputs
-                        type: io.kestra.plugin.core.storage.LocalFiles
-                        outputs:
-                          - "*.txt"
+                          AWS_DEFAULT_REGION: "{{ secret('AWS_DEFAULT_REGION') }}"                        
                 """
         )
     }
