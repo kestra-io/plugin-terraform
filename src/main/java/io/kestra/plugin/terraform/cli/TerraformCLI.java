@@ -38,7 +38,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
             full = true,
             code = """
                 id: git_terraform
-                namespace: dev
+                namespace: company.team
 
                 tasks:
                   - id: git
