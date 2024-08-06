@@ -114,7 +114,7 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
     @PluginProperty
     @Builder.Default
     @Valid
-    private TaskRunner taskRunner = Docker.INSTANCE;
+    private TaskRunner taskRunner = Docker.instance();
 
     @Schema(title = "The task runner container image, only used if the task runner is container-based.")
     @PluginProperty(dynamic = true)
