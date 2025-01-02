@@ -1,5 +1,6 @@
 package io.kestra.plugin.terraform.cli;
 
+import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.utils.IdUtils;
@@ -44,7 +45,7 @@ class TerraformCLITest {
 
         runner = terraformBuilder
             .env(Map.of("{{ inputs.environmentKey }}", "{{ inputs.environmentValue }}"))
-            .beforeCommands(List.of("terraform init"))
+            .beforeCommands(Property.of(List.of("terraform init")))
             .commands(List.of(
                 "echo \"::{\\\"outputs\\\":{" +
                     "\\\"customEnv\\\":\\\"$" + environmentKey + "\\\"" +
