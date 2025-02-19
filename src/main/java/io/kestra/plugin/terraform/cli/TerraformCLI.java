@@ -81,10 +81,8 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
     @Schema(
         title = "The commands to run such as `terraform apply -auto-approve`."
     )
-    @PluginProperty(dynamic = true)
     @NotNull
-    @NotEmpty
-    protected List<String> commands;
+    protected Property<List<String>> commands;
 
     @Schema(
         title = "Additional environment variables such as credentials and configuration for the Terraform provider."
@@ -123,7 +121,6 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
-        var renderedBeforeCommands = runContext.render(this.beforeCommands).asList(String.class);
         var renderedOutputFiles = runContext.render(this.outputFiles).asList(String.class);
         return new CommandsWrapper(runContext)
             .withWarningOnStdErr(true)
@@ -134,13 +131,9 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
             .withNamespaceFiles(namespaceFiles)
             .withInputFiles(inputFiles)
             .withOutputFiles(renderedOutputFiles.isEmpty() ? null : renderedOutputFiles)
-            .withCommands(
-                ScriptService.scriptCommands(
-                    List.of("/bin/sh", "-c"),
-                    renderedBeforeCommands.isEmpty() ? null : renderedBeforeCommands,
-                    runContext.render(this.commands)
-                )
-            )
+            .withInterpreter(Property.of(List.of("/bin/sh", "-c")))
+            .withBeforeCommands(this.beforeCommands)
+            .withCommands(this.commands)
             .run();
     }
 

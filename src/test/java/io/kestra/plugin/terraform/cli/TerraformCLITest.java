@@ -34,7 +34,7 @@ class TerraformCLITest {
             .id(IdUtils.create())
             .type(TerraformCLI.class.getName())
             .docker(DockerOptions.builder().image("hashicorp/terraform").entryPoint(Collections.emptyList()).build())
-            .commands(List.of("terraform version"));
+            .commands(Property.of(List.of("terraform version")));
 
         TerraformCLI runner = terraformBuilder.build();
 
@@ -46,12 +46,12 @@ class TerraformCLITest {
         runner = terraformBuilder
             .env(Map.of("{{ inputs.environmentKey }}", "{{ inputs.environmentValue }}"))
             .beforeCommands(Property.of(List.of("terraform init")))
-            .commands(List.of(
+            .commands(Property.of(List.of(
                 "echo \"::{\\\"outputs\\\":{" +
                     "\\\"customEnv\\\":\\\"$" + environmentKey + "\\\"" +
                     "}}::\"",
                 "terraform validate | tr -d ' \n' | xargs -0 -I {} echo '::{\"outputs\":{}}::'"
-                             ))
+                             )))
             .build();
 
         scriptOutput = runner.run(runContext);
