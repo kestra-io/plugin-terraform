@@ -28,7 +28,8 @@ import java.util.*;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Orchestrate Infrastructure as Code by executing Terraform CLI commands in a Docker container. This task assumes that you use a remote backend for storing Terraform state files, such as AWS S3, GCS, or Terraform Cloud."
+    title = "Run Terraform CLI commands in a Docker container.",
+    description = "Orchestrate Infrastructure as Code by executing Terraform CLI commands in a Docker container. This task assumes that you use a remote backend for storing Terraform state files, such as AWS S3, GCS, or Terraform Cloud."
 )
 @Plugin(
     examples = {
