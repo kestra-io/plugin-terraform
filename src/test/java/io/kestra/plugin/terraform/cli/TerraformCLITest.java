@@ -34,7 +34,7 @@ class TerraformCLITest {
             .id(IdUtils.create())
             .type(TerraformCLI.class.getName())
             .docker(DockerOptions.builder().image("hashicorp/terraform").entryPoint(Collections.emptyList()).build())
-            .commands(Property.of(List.of("terraform version")));
+            .commands(Property.ofValue(List.of("terraform version")));
 
         TerraformCLI runner = terraformBuilder.build();
 
@@ -45,8 +45,8 @@ class TerraformCLITest {
 
         runner = terraformBuilder
             .env(Map.of("{{ inputs.environmentKey }}", "{{ inputs.environmentValue }}"))
-            .beforeCommands(Property.of(List.of("terraform init")))
-            .commands(Property.of(List.of(
+            .beforeCommands(Property.ofValue(List.of("terraform init")))
+            .commands(Property.ofValue(List.of(
                 "echo \"::{\\\"outputs\\\":{" +
                     "\\\"customEnv\\\":\\\"$" + environmentKey + "\\\"" +
                     "}}::\"",
