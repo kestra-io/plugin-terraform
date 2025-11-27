@@ -1,0 +1,8 @@
+group: io.kestra.plugin.terraform
+name: "terraform"
+title: "Terraform"
+description: "Orchestrate Terraform resources with Kestra"
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"
