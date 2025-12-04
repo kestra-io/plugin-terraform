@@ -1,8 +1,8 @@
 group: io.kestra.plugin.terraform
 name: "terraform"
 title: "Terraform"
-description: "Orchestrate Terraform resources with Kestra"
-body: ""
+description: "Tasks that run Terraform commands from Kestra."
+body: "Provide Terraform configuration paths, backend/env variables, and CLI arguments to init, plan, apply, or destroy infrastructure, capturing outputs and state paths for deployment pipelines."
 videos: []
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"
