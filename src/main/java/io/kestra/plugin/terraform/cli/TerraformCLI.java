@@ -28,14 +28,14 @@ import java.util.*;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Run Terraform CLI commands in a Docker container.",
-    description = "Orchestrate Infrastructure as Code by executing Terraform CLI commands in a Docker container. This task assumes that you use a remote backend for storing Terraform state files, such as AWS S3, GCS, or Terraform Cloud."
+    title = "Run Terraform CLI commands in Docker",
+    description = "Executes Terraform commands inside the task runner container. Defaults to the `hashicorp/terraform` image and assumes a remote state backend such as S3, GCS, or Terraform Cloud."
 )
-@Plugin(
-    examples = {
-        @Example(
-            title = "Initialize Terraform, then create and apply the Terraform plan",
-            full = true,
+    @Plugin(
+        examples = {
+            @Example(
+                title = "Initialize Terraform, then create and apply the Terraform plan",
+                full = true,
             code = """
                 id: git_terraform
                 namespace: company.team
@@ -68,6 +68,29 @@ import java.util.*;
                           AWS_SECRET_ACCESS_KEY: "{{ secret('AWS_SECRET_ACCESS_KEY') }}"
                           AWS_DEFAULT_REGION: "{{ secret('AWS_DEFAULT_REGION') }}"
                 """
+        ),
+        @Example(
+            title = "Pin Terraform version and run validate then plan",
+            full = true,
+            code = """
+                id: terraform_plan_only
+                namespace: company.team
+
+                tasks:
+                  - id: terraform
+                    type: io.kestra.plugin.terraform.cli.TerraformCLI
+                    containerImage: hashicorp/terraform:1.6.6
+                    beforeCommands:
+                      - terraform init -input=false
+                    commands:
+                      - terraform validate -no-color
+                      - terraform plan -input=false -no-color -out=tfplan
+                    env:
+                      TF_VAR_region: us-east-1
+                      TF_TOKEN_app_terraform_io: "{{ secret('TF_API_TOKEN') }}"
+                    outputFiles:
+                      - tfplan
+                """
         )
     }
 )
@@ -75,18 +98,21 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
     private static final String DEFAULT_IMAGE = "hashicorp/terraform";
 
     @Schema(
-        title = "The setup commands to initialize the environment before executing the main list of commands such as `terraform init`."
+        title = "Pre-run setup commands",
+        description = "Commands executed before `commands`, typically `terraform init`."
     )
     protected Property<List<String>> beforeCommands;
 
     @Schema(
-        title = "The commands to run such as `terraform apply -auto-approve`."
+        title = "Primary Terraform CLI commands",
+        description = "Main commands run with `/bin/sh -c`, e.g., `terraform plan` or `terraform apply -auto-approve`."
     )
     @NotNull
     protected Property<List<String>> commands;
 
     @Schema(
-        title = "Additional environment variables such as credentials and configuration for the Terraform provider."
+        title = "Environment variables for commands",
+        description = "Extra variables passed to the process; use for provider credentials and configuration."
     )
     @PluginProperty(
         additionalProperties = String.class,
@@ -95,7 +121,8 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
     protected Map<String, String> env;
 
     @Schema(
-        title = "Deprecated, use 'taskRunner' instead"
+        title = "Deprecated Docker options",
+        description = "Use `taskRunner` instead of this legacy Docker configuration."
     )
     @PluginProperty
     @Deprecated
@@ -110,7 +137,10 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
     @Valid
     private TaskRunner<?> taskRunner = Docker.instance();
 
-    @Schema(title = "The task runner container image, only used if the task runner is container-based.")
+    @Schema(
+        title = "Task runner container image",
+        description = "Used only when the task runner is container-based; defaults to `hashicorp/terraform`."
+    )
     @Builder.Default
     private Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
