@@ -1,5 +1,5 @@
 @PluginSubGroup(
-    description = "This sub-group of plugins contains tasks for using Terraform.\n",categories = {
+    description = "This sub-group of plugins contains tasks for using Terraform.\n", categories = {
         PluginSubGroup.PluginCategory.INFRASTRUCTURE
     }
 )

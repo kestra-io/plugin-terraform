@@ -1,26 +1,24 @@
 package io.kestra.plugin.terraform.cli;
 
+import java.util.*;
+
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.*;
-import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.models.tasks.runners.TaskRunner;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.kestra.plugin.scripts.runner.docker.Docker;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-
-import java.util.*;
 
 @SuperBuilder
 @ToString
@@ -31,11 +29,11 @@ import java.util.*;
     title = "Run Terraform CLI commands in Docker",
     description = "Executes Terraform commands inside the task runner container. Defaults to the `hashicorp/terraform` image and assumes a remote state backend such as S3, GCS, or Terraform Cloud."
 )
-    @Plugin(
-        examples = {
-            @Example(
-                title = "Initialize Terraform, then create and apply the Terraform plan",
-                full = true,
+@Plugin(
+    examples = {
+        @Example(
+            title = "Initialize Terraform, then create and apply the Terraform plan",
+            full = true,
             code = """
                 id: git_terraform
                 namespace: company.team
