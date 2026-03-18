@@ -1,0 +1,42 @@
+id: all_terraform
+namespace: sanitychecks.plugin-terraform
+
+tasks:
+  - id: terraform
+    type: io.kestra.plugin.terraform.cli.TerraformCLI
+    beforeCommands:
+      - terraform init -input=false
+    inputFiles:
+      main.tf: |
+        terraform {
+          required_version = ">= 1.0.0"
+        }
+
+        variable "message" {
+          type    = string
+          default = "hello from kestra"
+        }
+
+        output "message" {
+          value = upper(var.message)
+        }
+    outputFiles:
+      - validate.txt
+      - plan.txt
+    commands:
+      - terraform validate -no-color > validate.txt
+      - terraform plan -input=false -lock=false -no-color > plan.txt
+
+  - id: assert
+    type: io.kestra.plugin.core.execution.Assert
+    conditions:
+      - "{{ outputs.terraform.exitCode == 0 }}"
+      - "{{ outputs.terraform.outputFiles['validate.txt'] is not null }}"
+      - "{{ outputs.terraform.outputFiles['plan.txt'] is not null }}"
+      - "{{ read(outputs.terraform.outputFiles['validate.txt']) contains 'Success!' }}"
+      - "{{ read(outputs.terraform.outputFiles['plan.txt']) contains 'Changes to Outputs' }}"
+      - "{{ read(outputs.terraform.outputFiles['plan.txt']) contains 'HELLO FROM KESTRA' }}"
+
+finally:
+  - id: purge
+    type: io.kestra.plugin.core.storage.PurgeCurrentExecutionFiles
