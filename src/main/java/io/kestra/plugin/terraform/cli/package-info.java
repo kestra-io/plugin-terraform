@@ -3,6 +3,6 @@
         PluginSubGroup.PluginCategory.INFRASTRUCTURE
     }
 )
-package io.kestra.plugin.terraform;
+package io.kestra.plugin.terraform.cli;
 
 import io.kestra.core.models.annotations.PluginSubGroup;
