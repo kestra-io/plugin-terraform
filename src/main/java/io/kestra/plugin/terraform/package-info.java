@@ -1,8 +1,8 @@
 @PluginSubGroup(
-    description = "Tasks that execute Terraform CLI operations.\n", categories = {
+    description = "Tasks that run Terraform commands from Kestra.\n", categories = {
         PluginSubGroup.PluginCategory.INFRASTRUCTURE
     }
 )
-package io.kestra.plugin.terraform.cli;
+package io.kestra.plugin.terraform;
 
 import io.kestra.core.models.annotations.PluginSubGroup;
