@@ -99,6 +99,7 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
         title = "Pre-run setup commands",
         description = "Commands executed before `commands`, typically `terraform init`."
     )
+    @PluginProperty(group = "execution")
     protected Property<List<String>> beforeCommands;
 
     @Schema(
@@ -106,13 +107,14 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
         description = "Main commands run with `/bin/sh -c`, e.g., `terraform plan` or `terraform apply -auto-approve`."
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<List<String>> commands;
 
     @Schema(
         title = "Environment variables for commands",
         description = "Extra variables passed to the process; use for provider credentials and configuration."
     )
-    @PluginProperty(
+    @PluginProperty(group = "execution", 
         additionalProperties = String.class,
         dynamic = true
     )
@@ -122,7 +124,7 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
         title = "Deprecated Docker options",
         description = "Use `taskRunner` instead of this legacy Docker configuration."
     )
-    @PluginProperty
+    @PluginProperty(group = "deprecated")
     @Deprecated
     private DockerOptions docker;
 
@@ -130,7 +132,7 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
         title = "The task runner to use.",
         description = "Task runners are provided by plugins, each have their own properties."
     )
-    @PluginProperty
+    @PluginProperty(group = "execution")
     @Builder.Default
     @Valid
     private TaskRunner<?> taskRunner = Docker.instance();
@@ -140,12 +142,16 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
         description = "Used only when the task runner is container-based; defaults to `hashicorp/terraform`."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     private Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
+    @PluginProperty(group = "source")
     private NamespaceFiles namespaceFiles;
 
+    @PluginProperty(group = "source")
     private Object inputFiles;
 
+    @PluginProperty(group = "destination")
     private Property<List<String>> outputFiles;
 
     @Override
