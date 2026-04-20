@@ -1,4 +1,4 @@
-group: io.kestra.plugin.terraform
+group: io.kestra.plugin.terraform.cli
 name: "cli"
 title: "Terraform CLI"
 description: "Tasks that execute Terraform CLI operations."
