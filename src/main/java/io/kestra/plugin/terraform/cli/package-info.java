@@ -1,4 +1,5 @@
 @PluginSubGroup(
+    title = "Terraform CLI",
     description = "Tasks that execute Terraform CLI operations.\n", categories = {
         PluginSubGroup.PluginCategory.INFRASTRUCTURE
     }
