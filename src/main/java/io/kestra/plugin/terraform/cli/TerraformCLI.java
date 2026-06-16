@@ -56,11 +56,9 @@ import lombok.experimental.SuperBuilder;
                             username            = "cicd"
                             password            = "{{ secret('CI_CD_PASSWORD') }}"
                             hostname            = "https://demo.kestra.io"
-                        outputFiles:
-                          - "*.txt"
                         commands:
-                          - terraform plan 2>&1 | tee plan_output.txt
-                          - terraform apply -auto-approve 2>&1 | tee apply_output.txt
+                          - terraform plan
+                          - terraform apply -auto-approve
                         env:
                           AWS_ACCESS_KEY_ID: "{{ secret('AWS_ACCESS_KEY_ID') }}"
                           AWS_SECRET_ACCESS_KEY: "{{ secret('AWS_SECRET_ACCESS_KEY') }}"
@@ -114,11 +112,23 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
         title = "Environment variables for commands",
         description = "Extra variables passed to the process; use for provider credentials and configuration."
     )
-    @PluginProperty(group = "execution", 
+    @PluginProperty(
+        group = "execution",
         additionalProperties = String.class,
         dynamic = true
     )
     protected Map<String, String> env;
+
+    @Schema(
+        title = "Fail the task on the first command with a non-zero exit status.",
+        description = """
+                If set to `false`, all commands run one after another and the task state is determined by the last command only.
+                Keep it enabled so a failing `terraform init`, `plan`, or `apply` fails the task instead of being reported as success.
+            """
+    )
+    @PluginProperty(group = "execution")
+    @Builder.Default
+    protected Property<Boolean> failFast = Property.ofValue(true);
 
     @Schema(
         title = "Deprecated Docker options",
@@ -168,6 +178,8 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
             .withOutputFiles(renderedOutputFiles.isEmpty() ? null : renderedOutputFiles)
             .withInterpreter(Property.ofValue(List.of("/bin/sh", "-c")))
             .withBeforeCommands(this.beforeCommands)
+            .withBeforeCommandsWithOptions(true)
+            .withFailFast(runContext.render(this.failFast).as(Boolean.class).orElse(true))
             .withCommands(this.commands)
             .run();
     }
