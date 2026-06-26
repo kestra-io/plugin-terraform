@@ -120,7 +120,7 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
     protected Map<String, String> env;
 
     @Schema(
-        title = "Fail the task on the first command with a non-zero exit status.",
+        title = "Fail the task on the first command with a non-zero exit status",
         description = """
                 If set to `false`, all commands run one after another and the task state is determined by the last command only.
                 Keep it enabled so a failing `terraform init`, `plan`, or `apply` fails the task instead of being reported as success.
@@ -139,7 +139,7 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
     private DockerOptions docker;
 
     @Schema(
-        title = "The task runner to use.",
+        title = "The task runner to use",
         description = "Task runners are provided by plugins, each have their own properties."
     )
     @PluginProperty(group = "execution")
