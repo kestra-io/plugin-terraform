@@ -117,6 +117,7 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
         additionalProperties = String.class,
         dynamic = true
     )
+    @ToString.Exclude
     protected Map<String, String> env;
 
     @Schema(
