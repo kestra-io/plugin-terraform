@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
+import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.utils.IdUtils;
@@ -19,6 +20,7 @@ import jakarta.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @KestraTest
 class TerraformCLITest {
@@ -63,5 +65,26 @@ class TerraformCLITest {
         scriptOutput = runner.run(runContext);
         assertThat(scriptOutput.getExitCode(), is(0));
         assertThat(scriptOutput.getVars().get("customEnv"), is(environmentValue));
+    }
+
+    @Test
+    void failsWhenAnEarlyCommandFails() throws Exception {
+        TerraformCLI runner = TerraformCLI.builder()
+            .id(IdUtils.create())
+            .type(TerraformCLI.class.getName())
+            .docker(DockerOptions.builder().image("hashicorp/terraform").entryPoint(Collections.emptyList()).build())
+            .commands(
+                Property.ofValue(
+                    List.of(
+                        "terraform thiscommanddoesnotexist",
+                        "terraform version"
+                    )
+                )
+            )
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, runner, Map.of());
+
+        assertThrows(RunnableTaskException.class, () -> runner.run(runContext));
     }
 }
