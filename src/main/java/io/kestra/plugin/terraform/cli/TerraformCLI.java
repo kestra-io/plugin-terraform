@@ -99,7 +99,9 @@ public class TerraformCLI extends AbstractExecScript implements RunnableTask<Scr
 
     @Schema(
         title = "Primary Terraform CLI commands",
-        description = "Main commands run through the `interpreter` (`/bin/sh -c` by default), e.g., `terraform plan` or `terraform apply -auto-approve`."
+        description = """
+            Main commands run through the `interpreter` (`/bin/sh -c` by default), e.g., `terraform plan` or `terraform apply -auto-approve`.
+            """
     )
     @NotNull
     @PluginProperty(group = "main")
