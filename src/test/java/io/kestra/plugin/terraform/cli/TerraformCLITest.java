@@ -19,7 +19,9 @@ import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import jakarta.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @KestraTest
@@ -48,7 +50,7 @@ class TerraformCLITest {
         assertThat(scriptOutput.getExitCode(), is(0));
 
         runner = terraformBuilder
-            .env(Map.of("{{ inputs.environmentKey }}", "{{ inputs.environmentValue }}"))
+            .env(Property.ofValue(Map.of("{{ inputs.environmentKey }}", "{{ inputs.environmentValue }}")))
             .beforeCommands(Property.ofValue(List.of("terraform init")))
             .commands(
                 Property.ofValue(
@@ -86,5 +88,19 @@ class TerraformCLITest {
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, runner, Map.of());
 
         assertThrows(RunnableTaskException.class, () -> runner.run(runContext));
+    }
+
+    @Test
+    void toStringDoesNotExposeEnvSecrets() throws Exception {
+        var task = TerraformCLI.builder()
+            .id(IdUtils.create())
+            .type(TerraformCLI.class.getName())
+            .commands(Property.ofValue(List.of("echo")))
+            .env(Property.ofValue(Map.of("SECRET_KEY", "super-secret-value")))
+            .build();
+        // render caches the value on the property, as run() does
+        TestsUtils.mockRunContext(runContextFactory, task, Map.of()).render(task.getEnv()).asMap(String.class, String.class);
+
+        assertThat(task.toString(), not(containsString("super-secret-value")));
     }
 }
