@@ -12,6 +12,6 @@ Terraform credentials are passed via environment variables in the `env` property
 
 ## Tasks
 
-`TerraformCLI` is the only task. Set `commands` to an ordered list of Terraform CLI arguments (e.g., `["init", "plan", "apply -auto-approve"]`). Configuration files must be present in the working directory — use a preceding `Clone` task or [namespace files](https://kestra.io/docs/concepts/namespace-files) to make them available. On Kestra 2.1 and later, `durable: true` (beta) makes a retry resume from the checkpoints a command printed as `::{"checkpoints": {...}}::`, exposed to the next attempt as `CHECKPOINTS_<KEY>` environment variables.
+`TerraformCLI` is the only task. Set `commands` to an ordered list of Terraform CLI arguments (e.g., `["terraform init", "terraform plan", "terraform apply -auto-approve"]`). Configuration files must be present in the working directory — use a preceding `Clone` task or [namespace files](https://kestra.io/docs/concepts/namespace-files) to make them available. On Kestra 2.1 and later, `durable: true` (beta) passes the keys a command printed as `::{"checkpoints": {...}}::` to the next attempt as `CHECKPOINTS_<KEY>` environment variables, so commands can skip the steps already done.
 
 Configure remote state (S3, GCS, Azure Blob) inside your Terraform configuration rather than relying on local state — local state does not persist between executions. Backend configuration values can be injected via `env` or passed as `-backend-config` flags in `commands`.

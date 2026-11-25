@@ -2,7 +2,6 @@ package io.kestra.plugin.terraform.cli;
 
 import java.util.List;
 
-import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
@@ -30,7 +29,8 @@ import lombok.experimental.SuperBuilder;
     title = "Run Terraform CLI commands in Docker",
     description = """
         Executes Terraform commands inside the task runner container. Defaults to the `hashicorp/terraform` image and assumes a remote state backend such as S3, GCS, or Terraform Cloud.
-        The inherited `warningOnStdErr` and `runner` properties are accepted but ignored: stderr is logged as is and `taskRunner` is the only runner setting honored."""
+        The inherited `warningOnStdErr` and `runner` properties are ignored. The deprecated `docker` option only applies on Kestra 1.3, use `taskRunner`.
+        """
 )
 @Plugin(
     examples = {
@@ -104,7 +104,7 @@ public class TerraformCLI extends AbstractExecScript implements RunnableTask<Scr
     @PluginProperty(group = "main")
     protected Property<List<String>> commands;
 
-    // Own copy: AbstractExecScript has no docker field from 2.0, NoSuchFieldError otherwise
+    // Kept here: core has no docker property from 2.0, flows using it would fail validation
     @Schema(
         title = "Deprecated Docker options",
         description = "Use `taskRunner` instead of this legacy Docker configuration."
@@ -141,7 +141,7 @@ public class TerraformCLI extends AbstractExecScript implements RunnableTask<Scr
     }
 
     @Override
-    protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
+    protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) {
         if (original == null) {
             return null;
         }
