@@ -1,17 +1,18 @@
 package io.kestra.plugin.terraform.cli;
 
-import java.util.*;
+import java.util.List;
 
+import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
-import io.kestra.core.models.tasks.*;
+import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TaskRunner;
 import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.kestra.plugin.scripts.runner.docker.Docker;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,7 +28,9 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Schema(
     title = "Run Terraform CLI commands in Docker",
-    description = "Executes Terraform commands inside the task runner container. Defaults to the `hashicorp/terraform` image and assumes a remote state backend such as S3, GCS, or Terraform Cloud."
+    description = """
+        Executes Terraform commands inside the task runner container. Defaults to the `hashicorp/terraform` image and assumes a remote state backend such as S3, GCS, or Terraform Cloud.
+        The inherited `warningOnStdErr` and `runner` properties are accepted but ignored: stderr is logged as is and `taskRunner` is the only runner setting honored."""
 )
 @Plugin(
     examples = {
@@ -90,15 +93,8 @@ import lombok.experimental.SuperBuilder;
         )
     }
 )
-public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, NamespaceFilesInterface, InputFilesInterface, OutputFilesInterface {
+public class TerraformCLI extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "hashicorp/terraform";
-
-    @Schema(
-        title = "Pre-run setup commands",
-        description = "Commands executed before `commands`, typically `terraform init`."
-    )
-    @PluginProperty(group = "execution")
-    protected Property<List<String>> beforeCommands;
 
     @Schema(
         title = "Primary Terraform CLI commands",
@@ -108,29 +104,7 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
     @PluginProperty(group = "main")
     protected Property<List<String>> commands;
 
-    @Schema(
-        title = "Environment variables for commands",
-        description = "Extra variables passed to the process; use for provider credentials and configuration."
-    )
-    @PluginProperty(
-        group = "execution",
-        additionalProperties = String.class,
-        dynamic = true
-    )
-    @ToString.Exclude
-    protected Map<String, String> env;
-
-    @Schema(
-        title = "Fail the task on the first command with a non-zero exit status",
-        description = """
-                If set to `false`, all commands run one after another and the task state is determined by the last command only.
-                Keep it enabled so a failing `terraform init`, `plan`, or `apply` fails the task instead of being reported as success.
-            """
-    )
-    @PluginProperty(group = "execution")
-    @Builder.Default
-    protected Property<Boolean> failFast = Property.ofValue(true);
-
+    // Own copy: AbstractExecScript has no docker field from 2.0, NoSuchFieldError otherwise
     @Schema(
         title = "Deprecated Docker options",
         description = "Use `taskRunner` instead of this legacy Docker configuration."
@@ -156,36 +130,18 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
     @PluginProperty(group = "execution")
     private Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
-    @PluginProperty(group = "source")
-    private NamespaceFiles namespaceFiles;
-
-    @PluginProperty(group = "source")
-    private Object inputFiles;
-
-    @PluginProperty(group = "destination")
-    private Property<List<String>> outputFiles;
-
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
-        var renderedOutputFiles = runContext.render(this.outputFiles).asList(String.class);
-        return new CommandsWrapper(runContext)
-            .withWarningOnStdErr(true)
-            .withDockerOptions(injectDefaults(getDocker()))
-            .withTaskRunner(this.taskRunner)
-            .withContainerImage(runContext.render(this.containerImage).as(String.class).orElse(null))
-            .withEnv(Optional.ofNullable(this.env != null ? runContext.renderMap(this.env) : null).orElse(new HashMap<>()))
-            .withNamespaceFiles(namespaceFiles)
-            .withInputFiles(inputFiles)
-            .withOutputFiles(renderedOutputFiles.isEmpty() ? null : renderedOutputFiles)
-            .withInterpreter(Property.ofValue(List.of("/bin/sh", "-c")))
-            .withBeforeCommands(this.beforeCommands)
+        return this.commands(runContext)
+            .withInterpreter(this.getInterpreter())
+            .withBeforeCommands(this.getBeforeCommands())
             .withBeforeCommandsWithOptions(true)
-            .withFailFast(runContext.render(this.failFast).as(Boolean.class).orElse(true))
             .withCommands(this.commands)
             .run();
     }
 
-    private DockerOptions injectDefaults(DockerOptions original) {
+    @Override
+    protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
         if (original == null) {
             return null;
         }
@@ -200,5 +156,4 @@ public class TerraformCLI extends Task implements RunnableTask<ScriptOutput>, Na
 
         return builder.build();
     }
-
 }

@@ -48,7 +48,7 @@ class TerraformCLITest {
         assertThat(scriptOutput.getExitCode(), is(0));
 
         runner = terraformBuilder
-            .env(Map.of("{{ inputs.environmentKey }}", "{{ inputs.environmentValue }}"))
+            .env(Property.ofValue(Map.of("{{ inputs.environmentKey }}", "{{ inputs.environmentValue }}")))
             .beforeCommands(Property.ofValue(List.of("terraform init")))
             .commands(
                 Property.ofValue(
